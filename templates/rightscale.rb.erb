@@ -1,0 +1,42 @@
+#!/opt/puppet/bin/ruby
+
+#setup environment first
+require 'etc'
+ENV['HOME'] = Etc.getpwuid(Process.uid).dir
+
+#require 'right_api_client'
+require 'puppet'
+require 'puppet/ssl/certificate_request'
+require 'puppet/util'
+require 'puppet/util/logging'
+include Puppet::Util::Logging
+clientcert = ARGV.pop
+token = <%= @right_token %>
+account_id = <%= @right_account %>
+api_url = <%= @right_api %>
+
+csr = Puppet::SSL::CertificateRequest.from_s(STDIN.read)
+
+
+if csr.request_extensions.find { |a| a['oid'] == '1.3.6.1.4.1.34380.1.2.1' }
+  instance_id = csr.request_extensions.find { |a| a['oid'] == '1.3.6.1.4.1.34380.1.2.1' }['value']
+else
+  return_code = -1
+end
+
+if instance_id
+  begin
+    @client = RightApi::Client.new(:instance_token => token, :account_id => account_id)
+    @client.api_url = api_url
+    if @client.servers(:id => instance_id).show {
+      return_code = 0
+      @log.info("CSR is valid")
+    } else {
+      return_code  = 1
+    }
+  rescue Exception => e
+    puts e.message
+  end
+end
+
+exit return_code

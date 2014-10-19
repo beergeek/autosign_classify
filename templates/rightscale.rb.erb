@@ -8,13 +8,14 @@ ENV['HOME'] = Etc.getpwuid(Process.uid).dir
 require 'puppet'
 require 'puppet/ssl/certificate_request'
 require 'puppet/util'
-require 'puppet/util/logging'
-include Puppet::Util::Logging
+require 'syslog'
+
 clientcert = ARGV.pop
 token = <%= @right_token %>
 account_id = <%= @right_account %>
 api_url = <%= @right_api %>
 
+Syslog.open("autosigner", Syslog::LOG_PID, Syslog::LOG_SYSLOG)
 csr = Puppet::SSL::CertificateRequest.from_s(STDIN.read)
 
 
@@ -30,9 +31,10 @@ if instance_id
     @client.api_url = api_url
     if @client.servers(:id => instance_id).show {
       return_code = 0
-      @log.info("CSR is valid")
+      Syslog.log(Syslog::LOG_INFO,"CSR is valid for autosigning")
     } else {
       return_code  = 1
+      Syslog.log(Syslog::LOG_INFO,"CSR is invalid and will not be signed")
     }
   rescue Exception => e
     puts e.message

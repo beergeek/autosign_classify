@@ -12,7 +12,8 @@ def get_and_write(clientcert)
   if File.exists?(clientcert)
     begin
       # This will fail if it is not a certificate, hence the rescue below
-      cert = Puppet::SSL::Certificate.new(File.basename(clientcert, 'pem'))
+      base_cert = File.basename(clientcert, 'pem')
+      cert = Puppet::SSL::Certificate.new(base_cert)
       cert_file = cert.read(clientcert)
       cert_file.extensions.each do |line|
         # Does it have the extension we need?
@@ -21,14 +22,12 @@ def get_and_write(clientcert)
           # Call the Rake API to classify.
           # This will not work if the node already exists
           Syslog.log(Syslog::LOG_INFO, "Attempting to classify #{File.basename(clientcert, 'pem')}")
-          system("/opt/puppet/bin/rake -f /opt/puppet/share/puppet-dashboard/Rakefile RAILS_ENV=production node:add[#{clientcert},'default',#{classifier_data},skip]")
+          system("/opt/puppet/bin/rake -f /opt/puppet/share/puppet-dashboard/Rakefile RAILS_ENV=production node:add[#{base_cert},'default',#{classifier_data},skip]")
         end
       end
     rescue Exception => e
       Syslog.log(Syslog::LOG_WARNING, "We had an error with the autoclassifier: #{e}")
     end
-  else
-    Syslog.log(Syslog::LOG_INFO, "#{File.basename(clientcert)} is not a certificate")
   end
 end
 

@@ -27,8 +27,7 @@ end
 
 if instance_id
   begin
-    @client = RightApi::Client.new(:instance_token => token, :account_id => account_id)
-    @client.api_url = api_url
+    @client = RightApi::Client.new(:instance_token => token, :api_url => api_url, :timeout => '30')
     if @client.servers(:id => instance_id).show {
       return_code = 0
       Syslog.log(Syslog::LOG_INFO,"CSR is valid for autosigning")
@@ -38,6 +37,8 @@ if instance_id
     }
   rescue Exception => e
     puts e.message
+    return_code = 1
+    Syslog.log(Syslog::LOG_INFO,"CSR is invalid or not found, and will not be signed")
   end
 end
 

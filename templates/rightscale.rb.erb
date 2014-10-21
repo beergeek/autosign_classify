@@ -12,7 +12,6 @@ require 'syslog'
 
 clientcert = ARGV.pop
 token = <%= @right_token %>
-account_id = <%= @right_account %>
 api_url = <%= @right_api %>
 
 Syslog.open("autosigner", Syslog::LOG_PID, Syslog::LOG_SYSLOG)

@@ -54,7 +54,8 @@ describe 'autosign_classify' do
     }
     let(:params) {
       {
-        :primary  => true,
+        :primary        => true,
+        :secondary_mom  => 'trousers.pants',
       }
     }
     it { should contain_class('autosign_classify') }

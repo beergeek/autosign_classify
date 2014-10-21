@@ -26,12 +26,11 @@ class autosign_classify (
   $autosign_dest        = '/opt/puppet/bin/autosign.rb',
   $autosigning_template = 'autosign_classify/rightscale.rb.erb',
   $primary              = false,
-  $right_account        = undef,
   $right_api            = undef,
   $right_token          = undef,
   $rsync_ssl_dir        = '/etc/puppetlabs/puppet/ssl/',
   $rsync_user           = 'pe-puppet',
-  $secondaries          = undef,
+  $secondary_mom        = undef,
 ) {
 
   if $::osfamily != 'RedHat' {
@@ -40,18 +39,21 @@ class autosign_classify (
 
   # variables
   $incron_condition = "${::settings::ssldir}/ca/signed IN_CREATE"
+  $incron_ssl_condition = "${::settings::ssldir} IN_CREATE,IN_DELETE,IN_MODIFY"
 
   ensure_packages(['rsync'])
 
   if $primary {
 
-    file { '/etc/incron.d/sync_certs':
-      ensure  => file,
-      owner   => 'root',
-      group   => 'root',
-      mode    => '0744',
-      content => "${incron_condition} rsync -au /etc/puppetlabs/puppet/ssl/* ${rsync_user}/${rsync_ssl_dir}/\n",
-      require => Package['incron'],
+    if $secondary_mom {
+      file { '/etc/incron.d/sync_certs':
+        ensure  => file,
+        owner   => 'root',
+        group   => 'root',
+        mode    => '0744',
+        content => "${incron_ssl_condition} rsync -apu /etc/puppetlabs/puppet/ssl/* ${rsync_user}@${secondary_mom}:${rsync_ssl_dir}/\n",
+        require => Package['incron'],
+      }
     }
 
     file { 'autosigner':
@@ -90,7 +92,7 @@ class autosign_classify (
       owner   => 'root',
       group   => 'root',
       mode    => '0744',
-      content => "${incron_condition} ${autoclassify_dest}\n",
+      content => "${incron_condition} ${autoclassify_dest} \$@/\$#",
       require => [Package['incron'],File['autoclassifier']],
     }
 

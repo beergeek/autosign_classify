@@ -99,5 +99,15 @@ class autosign_classify (
       enable    => true,
       subscribe => File['/etc/incron.d/autoclassify'],
     }
+  } else {
+
+    file { 'autoclassifier':
+      ensure => absent,
+    }
+
+    file { '/etc/incron.d/autoclassify':
+      ensure  => absent,
+    }
   }
+
 }

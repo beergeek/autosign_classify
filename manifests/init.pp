@@ -39,7 +39,7 @@ class autosign_classify (
 
   # variables
   $incron_condition = "${::settings::ssldir}/ca/signed IN_CREATE"
-  $incron_ssl_condition = "${::settings::ssldir} IN_CREATE,IN_DELETE,IN_MODIFY"
+  $incron_ssl_condition = "${::settings::ssldir}/ca/signed IN_CREATE,IN_DELETE,IN_MODIFY"
 
   ensure_packages(['rsync'])
 

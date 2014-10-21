@@ -101,8 +101,26 @@ class autosign_classify (
     }
   } else {
 
+    file { '/etc/incron.d/sync_certs':
+      ensure  => absent,
+    }
+
+    file { 'autosigner':
+      ensure => absent,
+      path   => $autosign_dest,
+    }
+
+    ini_setting { 'autosign':
+      ensure  => absent,
+      path    => "${::settings::confdir}/puppet.conf",
+      section => 'master',
+      setting => 'autosign',
+      value   => $autosign_dest,
+    }
+
     file { 'autoclassifier':
       ensure => absent,
+      path   => $autoclassify_dest,
     }
 
     file { '/etc/incron.d/autoclassify':

@@ -18,6 +18,32 @@ describe 'autosign_classify' do
       )
     }
 
+    it {
+      should contain_file('autosigner').with(
+        'ensure'  => 'absent',
+      )
+    }
+
+    it {
+      should contain_file('/etc/incron.d/sync_certs').with(
+        'ensure'  => 'absent',
+      )
+    }
+
+
+    it {
+      should contain_file('/etc/incron.d/autoclassify').with(
+        'ensure'  => 'absent',
+      )
+    }
+
+    it {
+      should contain_file('autoclassifier').with(
+        'ensure'  => 'absent',
+        'path'    => '/opt/puppet/share/puppet-dashboard/autoclassify.rb',
+      )
+    }
+
   end
 
   context 'as primary server' do
@@ -71,6 +97,7 @@ describe 'autosign_classify' do
         'owner'   => 'puppet-dashboard',
         'group'   => 'root',
         'mode'    => '0744',
+        'path'    => '/opt/puppet/share/puppet-dashboard/autoclassify.rb',
         'source'  => 'puppet:///modules/autosign_classify/autoclassify.rb',
       )
     }

@@ -13,6 +13,33 @@ describe 'autosign_classify' do
     it { should contain_class('autosign_classify') }
 
     it {
+      should contain_package('rsync').with(
+        'ensure'  => 'present',
+      )
+    }
+
+  end
+
+  context 'as primary server' do
+    let(:facts) {
+      {
+        :osfamily => 'RedHat',
+      }
+    }
+    let(:params) {
+      {
+        :primary  => true,
+      }
+    }
+    it { should contain_class('autosign_classify') }
+
+    it {
+      should contain_package('rsync').with(
+        'ensure'  => 'present',
+      )
+    }
+
+    it {
       should contain_file('autosigner').with(
         'ensure'  => 'file',
         'path'    => '/opt/puppet/bin/autosign.rb',
@@ -63,6 +90,14 @@ describe 'autosign_classify' do
       should contain_service('incrond').with(
         'ensure'  => 'running',
       ).that_subscribes_to('File[/etc/incron.d/autoclassify]')
+    }
+    it {
+      should contain_file('/etc/incron.d/sync_certs').with(
+        'ensure'  => 'file',
+        'owner'   => 'root',
+        'group'   => 'root',
+        'mode'    => '0744',
+      )
     }
   end
 end

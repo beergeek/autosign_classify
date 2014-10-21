@@ -25,57 +25,79 @@ class autosign_classify (
   $autoclassify_dest    = '/opt/puppet/share/puppet-dashboard/autoclassify.rb',
   $autosign_dest        = '/opt/puppet/bin/autosign.rb',
   $autosigning_template = 'autosign_classify/rightscale.rb.erb',
+  $primary              = false,
   $right_account        = undef,
   $right_api            = undef,
   $right_token          = undef,
+  $rsync_ssl_dir        = '/etc/puppetlabs/puppet/ssl/',
+  $rsync_user           = 'pe-puppet',
+  $secondaries          = undef,
 ) {
+
+  if $::osfamily != 'RedHat' {
+    fail("Wrong OS Family, should be RedHat, not ${::osfamily}")
+  }
 
   # variables
   $incron_condition = "${::settings::ssldir}/ca/signed IN_CREATE"
 
-  file { 'autosigner':
-    ensure  => file,
-    path    => $autosign_dest,
-    owner   => $::settings::user,
-    group   => $::settings::group,
-    mode    => '0755',
-    content => template($autosigning_template),
-  }
+  ensure_packages(['rsync'])
 
-  ini_setting { 'autosign':
-    ensure  => present,
-    path    => "${::settings::confdir}/puppet.conf",
-    section => 'master',
-    setting => 'autosign',
-    value   => $autosign_dest,
-    require => File['autosigner'],
-  }
+  if $primary {
 
-  package { 'incron':
-    ensure => present,
-  }
+    file { '/etc/incron.d/sync_certs':
+      ensure  => file,
+      owner   => 'root',
+      group   => 'root',
+      mode    => '0744',
+      content => "${incron_condition} rsync -au /etc/puppetlabs/puppet/ssl/* ${rsync_user}/${rsync_ssl_dir}/\n",
+      require => Package['incron'],
+    }
 
-  file { 'autoclassifier':
-    ensure => file,
-    path   => $autoclassify_dest,
-    owner  => 'puppet-dashboard',
-    group  => 'root',
-    mode   => '0744',
-    source => 'puppet:///modules/autosign_classify/autoclassify.rb',
-  }
+    file { 'autosigner':
+      ensure  => file,
+      path    => $autosign_dest,
+      owner   => $::settings::user,
+      group   => $::settings::group,
+      mode    => '0755',
+      content => template($autosigning_template),
+    }
 
-  file { '/etc/incron.d/autoclassify':
-    ensure  => file,
-    owner   => 'root',
-    group   => 'root',
-    mode    => '0744',
-    content => "${incron_condition} ${autoclassify_dest}\n",
-    require => [Package['incron'],File['autoclassifier']],
-  }
+    ini_setting { 'autosign':
+      ensure  => present,
+      path    => "${::settings::confdir}/puppet.conf",
+      section => 'master',
+      setting => 'autosign',
+      value   => $autosign_dest,
+      require => File['autosigner'],
+    }
 
-  service { 'incrond':
-    ensure    => running,
-    enable    => true,
-    subscribe => File['/etc/incron.d/autoclassify'],
+    package { 'incron':
+      ensure => present,
+    }
+
+    file { 'autoclassifier':
+      ensure => file,
+      path   => $autoclassify_dest,
+      owner  => 'puppet-dashboard',
+      group  => 'root',
+      mode   => '0744',
+      source => 'puppet:///modules/autosign_classify/autoclassify.rb',
+    }
+
+    file { '/etc/incron.d/autoclassify':
+      ensure  => file,
+      owner   => 'root',
+      group   => 'root',
+      mode    => '0744',
+      content => "${incron_condition} ${autoclassify_dest}\n",
+      require => [Package['incron'],File['autoclassifier']],
+    }
+
+    service { 'incrond':
+      ensure    => running,
+      enable    => true,
+      subscribe => File['/etc/incron.d/autoclassify'],
+    }
   }
 }

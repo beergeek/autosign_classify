@@ -56,6 +56,11 @@ class autosign_classify (
       }
     }
 
+    #package { 'right_api_client':
+    #  ensure   => present,
+    #  provider => 'gem',
+    #}
+
     file { 'autosigner':
       ensure  => file,
       path    => $autosign_dest,

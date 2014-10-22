@@ -12,7 +12,7 @@ def get_and_write(clientcert)
   if File.exists?(clientcert)
     begin
       # This will fail if it is not a certificate, hence the rescue below
-      base_cert = File.basename(clientcert, 'pem')
+      base_cert = File.basename(clientcert, '.pem')
       cert = Puppet::SSL::Certificate.new(base_cert)
       cert_file = cert.read(clientcert)
       cert_file.extensions.each do |line|
@@ -21,7 +21,7 @@ def get_and_write(clientcert)
           classifier_data = line.value
           # Call the Rake API to classify.
           # This will not work if the node already exists
-          Syslog.log(Syslog::LOG_INFO, "Attempting to classify #{File.basename(clientcert, 'pem')}")
+          Syslog.log(Syslog::LOG_INFO, "Attempting to classify #{base_cert}")
           system("/opt/puppet/bin/rake -f /opt/puppet/share/puppet-dashboard/Rakefile RAILS_ENV=production node:add[#{base_cert},'default',#{classifier_data},skip]")
         end
       end

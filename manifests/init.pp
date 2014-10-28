@@ -27,7 +27,7 @@ class autosign_classify (
   $autosigning_template = 'autosign_classify/rightscale.rb.erb',
   $primary              = false,
   $right_api            = undef,
-  $right_token          = undef,
+  $right_token_hash     = undef,
   $rsync_ssl_dir        = '/etc/puppetlabs/puppet/ssl/',
   $rsync_user           = 'pe-puppet',
   $secondary_mom        = undef,
@@ -60,6 +60,13 @@ class autosign_classify (
     #  ensure   => present,
     #  provider => 'gem',
     #}
+
+    if ! $right_token_hash {
+      fail("This auto signer needs the hash of tokens")
+    }
+    if ! $right_api {
+      fail("This auto signer needs the api_url")
+    }
 
     file { 'autosigner':
       ensure  => file,

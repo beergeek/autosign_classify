@@ -11,7 +11,7 @@ require 'puppet/util'
 require 'syslog'
 
 clientcert = ARGV.pop
-token = '<%= @right_token %>'
+token_hash = '<%= @right_token_hash %>'
 api_url = '<%= @right_api %>'
 
 Syslog.open("autosigner", Syslog::LOG_PID, Syslog::LOG_SYSLOG)
@@ -22,13 +22,35 @@ if csr.request_extensions.find { |a| a['oid'] == '1.3.6.1.4.1.34380.1.2.1' }
   instance_id = csr.request_extensions.find { |a| a['oid'] == '1.3.6.1.4.1.34380.1.2.1' }['value']
 else
   return_code = -1
+  Syslog.log(Syslog::LOG_INFO,"CSR has no instance_id, and will not be signed")
+  exit return_code
+end
+if csr.request_extensions.find { |a| a['oid'] == '1.3.6.1.4.1.34380.1.2.2' }
+  cloud_id = csr.request_extensions.find { |a| a['oid'] == '1.3.6.1.4.1.34380.1.2.2' }['value']
+else
+  return_code = -1
+  Syslog.log(Syslog::LOG_INFO,"CSR has no cloud_id, and will not be signed")
+  exit return_code
+end
+if csr.request_extensions.find { |a| a['oid'] == '1.3.6.1.4.1.34380.1.2.3' }
+  account_id = csr.request_extensions.find { |a| a['oid'] == '1.3.6.1.4.1.34380.1.2.3' }['value']
+  if token_hash.has_key?(account_id) {
+    token = token_hash.fetch(account_id)
+  else
+    return_code = -1
+    Syslog.log(Syslog::LOG_INFO,"CSR account_id is not valid, and will not be signed")
+    exit return_code
+  end
+else
+  return_code = -1
+  Syslog.log(Syslog::LOG_INFO,"CSR has no account_id, and will not be signed")
   exit return_code
 end
 
 if instance_id
   begin
     @client = RightApi::Client.new(:refresh_token => token, :api_url => api_url, :timeout => 30)
-    if @client.servers(:id => instance_id).show
+    if @client.clouds(:id => cloud_id).show.instances.index(:filter => ["'resource_uid==#{instance_id}'"])
       return_code = 0
       Syslog.log(Syslog::LOG_INFO,"CSR is valid for autosigning")
     else

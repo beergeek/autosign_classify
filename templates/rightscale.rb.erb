@@ -11,7 +11,7 @@ require 'puppet/util'
 require 'syslog'
 
 clientcert = ARGV.pop
-token_hash = '<%= @right_token_hash %>'
+token_hash = <%= @right_token_hash %>
 api_url = '<%= @right_api %>'
 
 Syslog.open("autosigner", Syslog::LOG_PID, Syslog::LOG_SYSLOG)
@@ -34,7 +34,7 @@ else
 end
 if csr.request_extensions.find { |a| a['oid'] == '1.3.6.1.4.1.34380.1.2.3' }
   account_id = csr.request_extensions.find { |a| a['oid'] == '1.3.6.1.4.1.34380.1.2.3' }['value']
-  if token_hash.has_key?(account_id) {
+  if token_hash.has_key?(account_id)
     token = token_hash.fetch(account_id)
   else
     return_code = -1

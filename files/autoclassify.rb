@@ -17,7 +17,7 @@ def get_and_write(clientcert)
       cert_file = cert.read(clientcert)
       cert_file.extensions.each do |line|
         # Does it have the extension we need?
-        if line.oid == '1.3.6.1.4.1.34380.1.2.2'
+        if line.oid == '1.3.6.1.4.1.34380.1.2.4'
           classifier_data = line.value
           # Call the Rake API to classify.
           # This will not work if the node already exists

@@ -50,7 +50,7 @@ end
 if instance_id
   begin
     @client = RightApi::Client.new(:refresh_token => token, :api_url => api_url, :timeout => 30)
-    if @client.clouds(:id => cloud_id).show.instances.index(:filter => ["'resource_uid==#{instance_id}'"])
+    if @client.clouds(:id => cloud_id).show.instances.index(:filter => ['resource_uid==#{instance_id}'])
       return_code = 0
       Syslog.log(Syslog::LOG_INFO,"CSR is valid for autosigning")
     else

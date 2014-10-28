@@ -26,7 +26,7 @@ end
 
 if instance_id
   begin
-    @client = RightApi::Client.new(:instance_token => token, :api_url => api_url, :timeout => '30')
+    @client = RightApi::Client.new(:refresh_token => token, :api_url => api_url, :timeout => 30)
     if @client.servers(:id => instance_id).show
       return_code = 0
       Syslog.log(Syslog::LOG_INFO,"CSR is valid for autosigning")
